@@ -1,0 +1,66 @@
+
+*README - 026 - Static Routing (Part 3) - Default & Floating Static Routes*
+
+*File Name:* `026 - Static Routing (Part 3).pkt`
+*Software:* Cisco Packet Tracer 8.2.2
+
+*1. Project Title:*
+Static Routing with Redundant Links - Primary and Backup Routes
+
+*2. Topology:*
+- *LAN:* 10.0.0.0/24 on *SW1*
+    - PC1 - 10.0.0.11 / .11
+    - PC2 - 10.0.0.12 / .12 (you are testing from here)
+    - PC3 - 10.0.0.13 / .13
+    - SW1 F0/0 -> *R3* F0/0 (10.0.0.1)
+
+- *WAN Interconnections:*
+    - R3 S2/0 <-> R1 S2/0 : 192.168.13.0/24 (.3 - .1)
+    - R3 S3/0 <-> R2 S2/0 : 192.168.23.0/24 (.3 - .2)
+    - R1 S3/0 <-> R2 S3/0 : 192.168.12.0/24 (.1 - .2)
+
+- Green cloud shows LAN grouping. Red links are Serial DCE links.
+- Laptop0 to R1, Laptop1 to R3 for console config.
+
+*3. Objective:*
+To test static routing with redundancy. Configure static routes so PC LAN can reach loopbacks/serial interfaces of remote routers, and configure a backup floating static route with higher AD.
+
+*4. Configuration Implemented:*
+
+On R3 (Gateway Router):
+interface f0/0
+ ip address 10.0.0.1 255.255.255.0
+ no shutdown
+interface s2/0
+ ip address 192.168.13.3 255.255.255.0
+ no shutdown
+interface s3/0
+ ip address 192.168.23.3 255.255.255.0
+ no shutdown
+
+ip route 192.168.12.0 255.255.255.0 192.168.13.1
+ip route 192.168.12.0 255.255.255.0 192.168.23.2 150  ! Floating backup
+On R1 and R2 similar static routes to reach 10.0.0.0/24 network.
+
+*5. Results / Testing:*
+Your screenshot proves it works:
+
+- *PC2 Command Prompt:*
+    `IP: 10.0.0.12 / 255.255.255.0 GW: 10.0.0.1`
+    `PING 192.168.13.1`
+    `Reply from 192.168.13.1: bytes=32 time=3ms-31ms TTL=253`
+    `Sent = 4, Received = 4, Lost = 0 (0% loss) - Average 25ms`
+
+- Simulation Panel (bottom right):
+    - PC1 -> R1 - Successful
+    - R1 -> PC1 - Successful
+    - R1 -> R2 - Successful
+    - R1 -> R3 - Successful
+
+End-to-end pings from LAN to all serial interfaces are successful.
+
+*6. How to Verify:*
+1. `ipconfig` on PC2 to confirm IP
+2. `ping 192.168.13.1`, `ping 192.168.23.2`, `ping 192.168.12.1`
+3. On routers: `show ip route` - you will see static routes with S and S* and the floating route with AD 150 only in backup.
+4. Shutdown primary serial link: `interface s2/0 shutdown` on R3 and re-ping to test backup path.

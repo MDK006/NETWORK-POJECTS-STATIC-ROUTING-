@@ -1,0 +1,59 @@
+
+*README - 024 - Static Routing (Part 1)*
+
+*File Name:* `024 - Static Routing (Part 1).pkt`
+*Software:* Cisco Packet Tracer 8.2.2
+
+*1. Project Title:*
+Static Routing Configuration Between Two Routers
+
+*2. Topology:*
+- *PC1* - 192.168.1.11/24 - Gateway 192.168.1.1 -> Connected to *SW0* G0/1
+- *SW0* G0/1 -> *R1* G0/1 (192.168.1.1/24)
+- *R1* G0/0 (10.0.0.1/24) <-> *R2* G0/0 (10.0.0.2/24) - WAN link
+- *R2* G0/1 (192.168.2.1/24) -> *SW1* G0/1
+- *SW1* -> *PC2* - 192.168.2.12/24 - Gateway 192.168.2.1
+- *4x Laptops:* Laptop0 to SW0, Laptop1 to R1, Laptop2 to R2, Laptop3 to SW1 - All connected via Console cable (blue) for configuration
+
+*3. Objective / Tasks:*
+1.  Configure G0/0 and G0/1 interfaces of R1 and R2 according to diagram and enable them (`no shutdown`).
+2.  From PC1, ping R1's G0/1, R1's G0/0, R2's G0/1, then PC2 - Note which succeeds/fails before static routes.
+3.  Similarly, ping from PC2 towards PC1.
+4.  Configure static routes on R1 and R2 to allow PC1 to reach PC2 and vice versa. Configure routes to the subnets, not to the host.
+5.  Test with `ping` and `tracert`.
+
+*4. Configuration Implemented:*
+
+On R1:
+interface g0/1
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+interface g0/0
+ ip address 10.0.0.1 255.255.255.0
+ no shutdown
+ip route 192.168.2.0 255.255.255.0 10.0.0.2
+On R2:
+interface g0/1
+ ip address 192.168.2.1 255.255.255.0
+ no shutdown
+interface g0/0
+ ip address 10.0.0.2 255.255.255.0
+ no shutdown
+ip route 192.168.1.0 255.255.255.0 10.0.0.1
+On PCs:
+PC1 IP: 192.168.1.11 Mask 255.255.255.0 Gateway 192.168.1.1
+PC2 IP: 192.168.2.12 Mask 255.255.255.0 Gateway 192.168.2.1
+
+*5. Results / Testing:*
+Simulation Mode shows SUCCESSFUL:
+
+- PC1 -> R2 - Successful - proves static route to 192.168.2.0 is working
+- PC1 -> PC2 - Successful - End-to-end connectivity achieved
+- PC2 -> R2 - Successful
+- PC2 -> R1 - Successful
+
+Before static routes, PC1 could only ping up to 10.0.0.1 and failed beyond. After static routes, full connectivity works.
+
+*6. How to Verify:*
+On PC1 Command Prompt: `ping 192.168.2.12` and `tracert 192.168.2.12`
+On Routers CLI: `show ip route` and `show ip interface brief`

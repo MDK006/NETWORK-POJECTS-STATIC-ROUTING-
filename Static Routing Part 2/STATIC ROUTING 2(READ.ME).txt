@@ -1,0 +1,68 @@
+
+*README - 025 - Static Routing (Part 2) - 4 Router Topology*
+
+*File Name:* `025 - Static Routing (Part 2).pkt`
+*Software:* Cisco Packet Tracer 8.2.2
+
+*1. Project Title:*
+Static Routing with 4 Routers - Full Mesh Connectivity
+
+*2. Topology:*
+This lab extends Part 1 to 4 sites connected via Serial WAN links.
+
+- *R1* F0/0: 10.0.1.0/24 (SW1 - PC1 10.0.1.11, PC11 10.0.1.111)
+- *R2* F0/0: 10.0.2.0/24 (SW2 - PC2 10.0.2.12, PC22 10.0.2.122)
+- *R3* F0/0: 10.0.3.0/24 (SW3 - PC3 10.0.3.13, PC33 10.0.3.133)
+- *R4* F0/0: 10.0.4.0/24 (SW4 - PC4 10.0.4.14, PC44 10.0.4.144)
+
+*WAN Links (Serial):*
+- R1 S3/0 <-> R2 S3/0 : 192.168.12.0/24 (.1 - .2)
+- R1 S2/0 <-> R3 S2/0 : 192.168.13.0/24
+- R2 S2/0 <-> R4 S2/0 : 192.168.24.0/24
+- R3 S3/0 <-> R4 S3/0 : 192.168.34.0/24
+
+- 4x Laptops (Laptop0-3) for console configuration via console cable
+
+*3. Objective:*
+To configure static routes on all 4 routers so that every LAN can reach every other LAN.
+
+Each router must know about the 3 remote LANs it is not directly connected to.
+
+*4. Configuration Implemented:*
+
+*Example R1:*
+interface F0/0
+ ip address 10.0.1.1 255.255.255.0
+ no shutdown
+interface S3/0
+ ip address 192.168.12.1 255.255.255.0
+ no shutdown
+interface S2/0
+ ip address 192.168.13.1 255.255.255.0
+ no shutdown
+
+ip route 10.0.2.0 255.255.255.0 192.168.12.2
+ip route 10.0.3.0 255.255.255.0 192.168.13.3
+ip route 10.0.4.0 255.255.255.0 192.168.12.2
+! or via R3 -> 192.168.13.3 depending on path chosen
+Same logic applied to R2, R3, R4 - static route for each remote 10.0.x.0 network pointing to next-hop serial IP.
+
+*5. Results / Testing:*
+As shown in your screenshot, full connectivity is achieved:
+
+- *From PC22 (10.0.2.122):* `PING 10.0.1.111` - Reply, 0% loss, TTL=126, avg 1ms - *Successful*
+- Simulation Panel:
+    - PC2 -> PC1 ICMP - Successful
+    - PC1 -> PC33 ICMP - Successful
+    - PC33 -> PC44 ICMP - Successful
+    - PC44 -> PC22 ICMP - Successful
+
+This proves inter-site static routing across all 4 routers is working.
+
+*6. How to Verify:*
+From any PC:
+`ping 10.0.1.11`, `ping 10.0.2.12`, `ping 10.0.3.13`, `ping 10.0.4.14`
+
+On routers:
+`show ip route` - should show S routes for all 10.0.x.0 networks
+`show ip interface brief`
